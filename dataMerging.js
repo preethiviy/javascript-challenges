@@ -32,26 +32,49 @@ const sessions = [
     The input objects should not be modified.
 */
 
+// function mergeData(sessions) {
+//     const obj = new Map();
+
+//     for (let row of sessions) {
+//         const userId = row.user;
+//         if (!obj.has(userId)) {
+//             obj.set(userId, row);
+//         } else {
+//             let currentValue = obj.get(userId);
+//             currentValue.duration = currentValue.duration + row.duration;
+//             const currentEquipmentSet = new Set(currentValue.equipment);
+//             for (let equipment of row.equipment) {
+//                 currentEquipmentSet.add(equipment);
+//             }
+//             const currentEquipmentArray = Array.from(currentEquipmentSet);
+//             currentValue.equipment = currentEquipmentArray.sort();
+//         }
+//     }
+
+//     return Array.from(obj, ([key, value]) => value);
+// }
+
 function mergeData(sessions) {
-    const obj = new Map();
+    const merged = new Map(); // Use a Map to track merged data by user ID
 
-    for (let row of sessions) {
-        const userId = row.user;
-        if (!obj.has(userId)) {
-            obj.set(userId, row);
+    sessions.forEach((session) => {
+        const { user, duration, equipment } = session;
+
+        if (!merged.has(user)) {
+            // Create a new entry for the user if not already present
+            merged.set(user, { ...session, equipment: [...equipment] });
         } else {
-            let currentValue = obj.get(userId);
-            currentValue.duration = currentValue.duration + row.duration;
-            const currentEquipmentSet = new Set(currentValue.equipment);
-            for (let equipment of row.equipment) {
-                currentEquipmentSet.add(equipment);
-            }
-            const currentEquipmentArray = Array.from(currentEquipmentSet);
-            currentValue.equipment = currentEquipmentArray.sort();
+            // Merge the session into the existing user's entry
+            const existing = merged.get(user);
+            existing.duration += duration;
+            existing.equipment = Array.from(
+                new Set([...existing.equipment, ...equipment])
+            ).sort(); // Deduplicate and sort equipment
         }
-    }
+    });
 
-    return Array.from(obj, ([key, value]) => value);
+    // Convert Map back to an array while preserving original order
+    return Array.from(merged, ([key, value]) => value);
 }
 
 const returnValue = mergeData(sessions);
